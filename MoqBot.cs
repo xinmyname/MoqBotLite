@@ -8,8 +8,38 @@ namespace MoqBotLite
 {
     public class MoqBot : IDisposable {
 
+        private interface IResolveTypes {
+            object Resolve();
+        }
+
+        private class ConstantResolver : IResolveTypes {
+
+            private readonly object _value;
+
+            public ConstantResolver(object value) {
+                _value = value;
+            }
+
+            public object Resolve() {
+                return _value;
+            }
+        }
+
+        private class DynamicResolver<T> : IResolveTypes {
+
+            private readonly Func<T> _builder;
+
+            public DynamicResolver(Func<T> builder) {
+                _builder = builder;
+            }
+
+            public object Resolve() {
+                return _builder();
+            }
+        }
+
         private readonly MockRepository _factory;
-        private readonly IDictionary<Type,object> _bindings;
+        private readonly IDictionary<Type,IResolveTypes> _bindings;
 
         private bool _disposedValue = false;
 
@@ -23,14 +53,14 @@ namespace MoqBotLite
 
         public MoqBot(MockRepository factory) {
             _factory = factory;
-            _bindings = new Dictionary<Type,object>();
+            _bindings = new Dictionary<Type,IResolveTypes>();
         }
 
         public Mock<I> Mock<I>(MockBehavior behavior) where I : class {
 
             Mock<I> mock = _factory.Create<I>(behavior);
 
-            _bindings[typeof(I)] = mock.Object;
+            _bindings[typeof(I)] = new ConstantResolver(mock.Object);
 
             return mock;
         }
@@ -47,6 +77,10 @@ namespace MoqBotLite
             _factory.Verify();
         }
 
+        public void Register<T>(Func<T> builder) {
+            _bindings[typeof(T)] = new DynamicResolver<T>(builder);
+        }
+
         public T Get<T>() {
 
             ConstructorInfo constructorInfo = FindConstructorFor<T>();
@@ -58,7 +92,8 @@ namespace MoqBotLite
                 Type paramType = constructorParams[i].ParameterType;
 
                 if (_bindings.ContainsKey(paramType)) {
-                    mockParams[i] = _bindings[paramType];
+                    IResolveTypes resolver = _bindings[paramType];
+                    mockParams[i] = resolver.Resolve();
                 } else if (paramType.IsValueType) {
                     mockParams[i] = Activator.CreateInstance(paramType);
                 }
