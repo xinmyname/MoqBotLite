@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageId>MoqBotLite</PackageId>
+    <Description>A light-weight version of MoqBot with a built-in IoC container. MoqBotLite is an automocker that leverages the Moq mocking library.</Description>
+    <Author>Andy Sherwood</Author>
+    <Copyright>© Andy Sherwood. All rights reserved.</Copyright>
+    <PackageProjectUrl>https://github.com/xinmyname/MoqBotLite</PackageProjectUrl>
+    <AssemblyName>MoqBotLite</AssemblyName>
+    <RootNamespace>MoqBotLite</RootNamespace>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Moq" Version="4.7.99" />
+  </ItemGroup>
+</Project>
